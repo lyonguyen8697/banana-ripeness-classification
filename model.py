@@ -8,7 +8,7 @@ import pandas as pd
 from utils import NeuralLayers, Optimizer
 
 
-class Recognizer:
+class BananaRipenessClassifier:
     def __init__(self,
                  hparams,
                  trainable):
@@ -315,7 +315,7 @@ class Recognizer:
         save_dir = save_dir or self.hparams.save_dir
         global_step = global_step or self.global_step.eval(session=sess)
 
-        self.saver.save(sess, save_dir + '/model.ckpt', global_step=global_step)
+        self.saver.save(sess, save_dir + '/banana-ripeness-classifier-model.ckpt', global_step=global_step)
 
     def load(self, sess, checkpoint=None):
         if self.saver is None:

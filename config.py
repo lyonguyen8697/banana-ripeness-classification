@@ -11,11 +11,11 @@ class HyperParameters(object):
 
         # about the optimization
         self.num_epochs = 100
-        self.batch_size = 64
+        self.batch_size = 32
         self.optimizer = 'SGD'  # 'Adam', 'RMSProp', 'Momentum' or 'SGD'
-        self.initial_learning_rate = 0.005
+        self.initial_learning_rate = 0.01
         self.learning_rate_decay_factor = 1.0
-        self.num_steps_per_decay = 2000
+        self.num_steps_per_decay = 1000
         self.clip_gradients = 5.0
         self.momentum = 0.0
         self.use_nesterov = True
@@ -28,10 +28,9 @@ class HyperParameters(object):
         self.save_dir = '/models'
         self.summary_period = 1
         self.summary_dir = './summary'
-        self.eval_period = 704
+        self.eval_period = 95
 
-        self.label_file = ''
-        self.train_image_dir = './data/train_images'
-        self.val_image_dir = './data/val_images'
+        self.train_image_dir = './dataset/classified_images'
+        self.val_image_dir = './dataset/val_images'
         self.test_image_dir = './data/test_images'
         self.test_result_dir = './data/test_result_images'

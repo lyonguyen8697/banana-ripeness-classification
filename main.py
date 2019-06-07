@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from model import Recognizer
+from model import BananaRipenessClassifier
 from dataset import DataSet
 from config import HyperParameters
 
@@ -8,8 +8,6 @@ FLAGS = tf.app.flags.FLAGS
 
 tf.flags.DEFINE_string('phase', 'train',
                        '')
-tf.flags.DEFINE_string('label_file', '',
-                       'Label file path')
 tf.flags.DEFINE_string('dataset_dir', '/dataset',
                        'Directory where the data needed for training is stored')
 tf.flags.DEFINE_bool('load_checkpoint', True,
@@ -19,21 +17,19 @@ tf.flags.DEFINE_string('checkpoint', None,
 tf.flags.DEFINE_string('summary_dir', '',
                        'Directory where to save summary data')
 
-
 def main(args):
     hparams = HyperParameters()
-    hparams.label_file = FLAGS.label_file or hparams.label_file
     hparams.summary_dir = FLAGS.summary_dir if FLAGS.summary_dir else hparams.summary_dir
 
     if FLAGS.phase == 'train':
         train_dataset = DataSet(hparams.train_image_dir,
+                                True,
                                 hparams.batch_size, [224, 224, 3],
-                                label_file=hparams.label_file,
                                 shuffle=True,
                                 augmented=True)
         val_dataset = DataSet(hparams.val_image_dir,
+                              True,
                               hparams.batch_size, [224, 224, 3],
-                              label_file=hparams.label_file,
                               shuffle=False,
                               augmented=False)
         # test_dataset = DataSet(hparams.test_image_dir,
@@ -43,8 +39,8 @@ def main(args):
         #                        augmented=False)
 
         with tf.Session() as sess:
-            model = Recognizer(hparams,
-                               trainable=True)
+            model = BananaRipenessClassifier(hparams,
+                                             trainable=True)
             model.train(sess,
                         train_dataset=train_dataset,
                         val_dataset=val_dataset,
@@ -52,24 +48,25 @@ def main(args):
                         checkpoint=FLAGS.checkpoint)
     elif FLAGS.phase == 'eval':
         test_dataset = DataSet(hparams.test_image_dir,
+                               True,
                                hparams.batch_size, [224, 224, 3],
-                               label_file=hparams.label_file,
                                shuffle=False,
                                augmented=False)
         with tf.Session() as sess:
-            model = Recognizer(hparams,
-                               trainable=True)
+            model = BananaRipenessClassifier(hparams,
+                                             trainable=True)
             model.eval(sess,
                        test_dataset,
                        checkpoint=FLAGS.checkpoint)
     else:
         test_dataset = DataSet(hparams.test_image_dir,
+                               False,
                               hparams.batch_size, [224, 224, 3],
                               shuffle=False,
                               augmented=False)
         with tf.Session() as sess:
-            model = Recognizer(hparams,
-                               trainable=True)
+            model = BananaRipenessClassifier(hparams,
+                                             trainable=True)
             model.test(sess,
                        test_dataset,
                        checkpoint=FLAGS.checkpoint)

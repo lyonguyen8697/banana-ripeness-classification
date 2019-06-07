@@ -9,15 +9,15 @@ import imgaug.augmenters as iaa
 class DataSet(object):
     def __init__(self,
                  image_dir,
+                 labeled,
                  batch_size,
                  image_size,
-                 label_file=None,
                  shuffle=True,
                  augmented=False):
         self.image_dir = image_dir
+        self.labeled = labeled
         self.batch_size = batch_size
         self.image_size = image_size
-        self.label_file = label_file
         self.shuffle = shuffle
         self.augmented = augmented
         self.setup()
@@ -26,29 +26,28 @@ class DataSet(object):
 
         self.image_files = []
         self.labels = []
-        if self.label_file:
-            self.labels = pd.read_csv(self.label_file)[['image', 'label']].to_numpy()
-            for image_file, label in self.labels:
-                self.image_files.append(image_file)
-                self.labels.append(label)
+        if self.labeled:
+            labels = os.listdir(self.image_dir)
+            for label in labels:
+                image_files = os.listdir('{}/{}'.format(self.image_dir, label))
+                image_files = ['{}/{}/{}'.format(self.image_dir, label, f) for f in image_files if f.lower().endswith('.jpg') or f.lower().endswith('.png')]
+                self.image_files.extend(image_files)
+                self.labels.extend([int(label) - 1] * len(image_files))
         else:
             self.image_files = os.listdir(self.image_dir)
-            self.image_files = [f for f in self.image_files if f.lower().endswith('.jpg') or f.lower().endswith('.jpeg')]
+            self.image_files = ['{}/{}'.format(self.image_dir, f) for f in self.image_files if f.lower().endswith('.jpg') or f.lower().endswith('.png')]
 
         self.image_files = np.array(self.image_files)
         self.labels = np.array(self.labels)
         self.count = len(self.image_files)
         self.num_batches = math.ceil(self.count / self.batch_size)
         self.idxs = list(range(self.count))
-        if self.augmented and self.include_label:
+        if self.augmented and self.labeled:
             self.build_augmentor()
         self.reset()
 
     def build_augmentor(self):
-        self.augmentor = iaa.Sometimes(0.5,
-                                       iaa.OneOf([
-                                           iaa.Noop()
-                                       ]))
+        self.augmentor = iaa.Sometimes(0.5, iaa.GammaContrast(gamma=(0.3, 1.5)))
 
     def reset(self):
         self.current_idx = 0
@@ -72,7 +71,7 @@ class DataSet(object):
 
         labels = self.labels[current_idxs]
 
-        if self.include_label:
+        if self.labeled:
             return images, labels
         else:
             return images
@@ -83,10 +82,10 @@ class DataSet(object):
     def load_images(self, image_files):
         images = []
         for image_file in image_files:
-            image = self.load_image(self.image_dir + '/' + image_file)
+            image = self.load_image(image_file)
             images.append(image)
 
-        if self.augmented and self.include_label:
+        if self.augmented and self.labeled:
             self.augmentor.augment_images(images)
 
         images = np.array(images) / 255.0
@@ -95,7 +94,7 @@ class DataSet(object):
 
     def load_image(self, image_file):
         image = cv2.imread(image_file)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
         image = cv2.resize(image, tuple(self.image_size[:2]))
 
         return image
